@@ -11,7 +11,7 @@ import (
 	"github.com/orfeo42/lunch-notification/internal/todo"
 )
 
-//go:generate moq -out reminder_mock.go . PlanSource TaskWriter
+//go:generate go tool moq -out reminder_mock.go . PlanSource TaskWriter
 
 type PlanSource interface {
 	DayPlan(ctx context.Context, day time.Time) (meal.DayPlan, error)

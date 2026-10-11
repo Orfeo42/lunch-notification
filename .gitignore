@@ -6,3 +6,4 @@ token.json
 deploy/secrets/
 deploy/.env
 /lunch-notification
+**/*_mock.go

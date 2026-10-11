@@ -72,4 +72,5 @@ Run once immediately, outside the schedule. It ensures tomorrow's tasks with the
 
 ## Development
 
-- `go test -short ./...`
+- `just test` regenerates the mocks and runs the tests; scope with `just test ./internal/gtasks/...`.
+- Mocks are generated with [moq](https://github.com/matryer/moq), pinned as a Go tool in `go.mod` (`go tool moq`), via `//go:generate` directives. They are gitignored: run `just gen-mocks` after a fresh clone or an interface change.
