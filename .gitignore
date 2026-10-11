@@ -1,0 +1,8 @@
+.claude/
+credentials.json
+token.json
+.env
+
+deploy/secrets/
+deploy/.env
+/lunch-notification

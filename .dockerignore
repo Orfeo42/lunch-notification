@@ -1,0 +1,6 @@
+.git
+.claude
+deploy/secrets
+credentials.json
+token.json
+README.md

@@ -1,0 +1,18 @@
+services:
+  lunch-notification:
+    image: ghcr.io/orfeo42/lunch-notification:latest
+    pull_policy: always
+    restart: unless-stopped
+    environment:
+      RUN_AT: ${RUN_AT:-20:00}
+      TIMEZONE: ${TIMEZONE:-Europe/Rome}
+      SHEET_ID: ${SHEET_ID:?}
+      SHEET_RANGE: ${SHEET_RANGE:-Menù!A1:H4}
+      TASKLIST_ID: ${TASKLIST_ID:-@default}
+    volumes:
+      - ./secrets:/data:ro
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
