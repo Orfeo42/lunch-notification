@@ -55,8 +55,13 @@ If the job logs `invalid_grant`, the token was revoked or expired: run `just aut
 
 ## Deploy on the Pi
 
-- `cd deploy && cp .env.example .env && docker compose up -d`
-- Logs: `docker compose logs -f`
+The container runs as the image's unprivileged `nonroot` user (uid 65532) and joins your user's group through `group_add`, so the secrets only need to be group-readable.
+
+1. Copy `deploy/compose.yaml` and `deploy/.env.example` to `~/app/lunch-notification/` on the Pi, and `credentials.json` + `token.json` to `~/app/lunch-notification/secrets/`.
+2. `cd ~/app/lunch-notification && cp .env.example .env`, then set `GID` in `.env` to the output of `id -g`.
+3. `chmod 750 secrets && chmod 640 secrets/*.json`
+4. `docker compose up -d`
+5. Logs: `docker compose logs -f`. Expect `starting` and `next run scheduled`, preceded by `catch-up run` when started after `RUN_AT`.
 
 ## Development
 

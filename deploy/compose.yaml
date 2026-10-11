@@ -3,6 +3,8 @@ services:
     image: ghcr.io/orfeo42/lunch-notification:latest
     pull_policy: always
     restart: unless-stopped
+    group_add:
+      - ${GID:?}
     environment:
       RUN_AT: ${RUN_AT:-20:00}
       TIMEZONE: ${TIMEZONE:-Europe/Rome}
