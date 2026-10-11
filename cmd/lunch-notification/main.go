@@ -60,6 +60,9 @@ func run(ctx context.Context, args []string) error {
 	if args[0] == "auth" {
 		return auth(ctx)
 	}
+	if args[0] == "run-once" {
+		return runOnce(ctx)
+	}
 	return fmt.Errorf("%w: %s", ErrUnknownCommand, args[0])
 }
 
@@ -78,24 +81,32 @@ func auth(ctx context.Context) error {
 	return nil
 }
 
+func runOnce(ctx context.Context) error {
+	cfg, err := config.Load()
+	if err != nil {
+		return fmt.Errorf("load config: %w", err)
+	}
+	svc, err := newService(ctx, cfg)
+	if err != nil {
+		return err
+	}
+	now := time.Now().In(&cfg.Timezone)
+	slog.InfoContext(ctx, "manual run", slog.Time("now", now))
+	if err := svc.Run(ctx, now); err != nil {
+		return fmt.Errorf("manual run: %w", err)
+	}
+	return nil
+}
+
 func serve(ctx context.Context) error {
 	cfg, err := config.Load()
 	if err != nil {
 		return fmt.Errorf("load config: %w", err)
 	}
-	httpClient, err := googleauth.Client(ctx, cfg.GoogleCredentialsFile, cfg.GoogleTokenFile)
+	svc, err := newService(ctx, cfg)
 	if err != nil {
-		return fmt.Errorf("google client: %w", err)
+		return err
 	}
-	src, err := newPlanSource(ctx, cfg, httpClient)
-	if err != nil {
-		return fmt.Errorf("plan source: %w", err)
-	}
-	dst, err := newTaskWriter(ctx, cfg, httpClient)
-	if err != nil {
-		return fmt.Errorf("task writer: %w", err)
-	}
-	svc := reminder.New(src, dst)
 
 	slog.InfoContext(ctx, "starting",
 		slog.String("source", cfg.Source),
@@ -110,6 +121,22 @@ func serve(ctx context.Context) error {
 		}
 	})
 	return nil
+}
+
+func newService(ctx context.Context, cfg config.Config) (*reminder.Service, error) {
+	httpClient, err := googleauth.Client(ctx, cfg.GoogleCredentialsFile, cfg.GoogleTokenFile)
+	if err != nil {
+		return nil, fmt.Errorf("google client: %w", err)
+	}
+	src, err := newPlanSource(ctx, cfg, httpClient)
+	if err != nil {
+		return nil, fmt.Errorf("plan source: %w", err)
+	}
+	dst, err := newTaskWriter(ctx, cfg, httpClient)
+	if err != nil {
+		return nil, fmt.Errorf("task writer: %w", err)
+	}
+	return reminder.New(src, dst), nil
 }
 
 func newPlanSource(ctx context.Context, cfg config.Config, httpClient *http.Client) (reminder.PlanSource, error) {

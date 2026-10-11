@@ -5,9 +5,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/fs"
 	"log/slog"
 	"net/http"
 	"net/url"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -31,6 +33,13 @@ func TestRun(t *testing.T) {
 	t.Run("unknown command returns ErrUnknownCommand", func(t *testing.T) {
 		err := run(context.Background(), []string{"bogus"})
 		require.ErrorIs(t, err, ErrUnknownCommand)
+	})
+
+	t.Run("run-once with missing credentials file returns not-exist error", func(t *testing.T) {
+		t.Setenv("GOOGLE_CREDENTIALS_FILE", filepath.Join(t.TempDir(), "missing.json"))
+		err := run(context.Background(), []string{"run-once"})
+		require.ErrorIs(t, err, fs.ErrNotExist)
+		assert.NotErrorIs(t, err, ErrUnknownCommand)
 	})
 }
 

@@ -2,7 +2,7 @@
 
 Long-running container that, once a day at RUN_AT in TIMEZONE, reads tomorrow's menu from a Google Sheet and ensures one Google Task per meal ("Pranzo: <dish>", "Cena: <dish>") due tomorrow.
 
-It is idempotent (re-runs never duplicate tasks) and catches up on startup if today's RUN_AT already passed. Subcommands: `serve` (default) and `auth` (one-time OAuth consent).
+It is idempotent (re-runs never duplicate tasks) and catches up on startup if today's RUN_AT already passed. Subcommands: `serve` (default), `run-once` (single immediate run) and `auth` (one-time OAuth consent).
 
 ## Architecture
 
@@ -57,11 +57,18 @@ If the job logs `invalid_grant`, the token was revoked or expired: run `just aut
 
 The container runs as the image's unprivileged `nonroot` user (uid 65532) and joins your user's group through `group_add`, so the secrets only need to be group-readable.
 
-1. Copy `deploy/compose.yaml` and `deploy/.env.example` to `~/app/lunch-notification/` on the Pi, and `credentials.json` + `token.json` to `~/app/lunch-notification/secrets/`.
-2. `cd ~/app/lunch-notification && cp .env.example .env`, then set `GID` in `.env` to the output of `id -g`.
+1. Copy `deploy/compose.yaml` and `deploy/.env.example` to `~/apps/lunch-notification/` on the Pi, and `credentials.json` + `token.json` to `~/apps/lunch-notification/secrets/`.
+2. `cd ~/apps/lunch-notification && cp .env.example .env`, then set `GID` in `.env` to the output of `id -g`.
 3. `chmod 750 secrets && chmod 640 secrets/*.json`
 4. `docker compose up -d`
 5. Logs: `docker compose logs -f`. Expect `starting` and `next run scheduled`, preceded by `catch-up run` when started after `RUN_AT`.
+
+## Manual run
+
+Run once immediately, outside the schedule. It ensures tomorrow's tasks with the same config and secrets, then exits; existing tasks are not duplicated.
+
+- From your machine: `just pi-run-once` (defaults: host `raspberry`, dir `~/apps/lunch-notification`; override with `just pi-run-once <host> <dir>`).
+- On the Pi: `docker compose run --rm lunch-notification run-once`
 
 ## Development
 
